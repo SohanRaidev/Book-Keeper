@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - BookKeeper{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                <div class="me-4">
+                    <div class="profile-avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="fas fa-user fa-2x"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="h2 mb-1">{{ current_user.username }}</h1>
+                    <p class="text-muted mb-1">{{ current_user.email }}</p>
+                    <small class="text-muted">Member since {{ current_user.created_at.strftime('%B %Y') }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Statistics Cards -->
+        <div class="col-lg-8">
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-books fa-3x text-primary"></i>
+                            </div>
+                            <h3 class="h2 mb-1 text-primary">{{ total_books }}</h3>
+                            <p class="text-muted mb-0">Total Books</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-heart fa-3x text-danger"></i>
+                            </div>
+                            <h3 class="h2 mb-1 text-danger">{{ favorite_genre }}</h3>
+                            <p class="text-muted mb-0">Favorite Genre</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card border-0 shadow-sm h-100 stat-card">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-calendar-check fa-3x text-success"></i>
+                            </div>
+                            <h3 class="h2 mb-1 text-success">{{ current_user.created_at.strftime('%Y') }}</h3>
+                            <p class="text-muted mb-0">Member Since</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Books -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Recently Added Books
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_books %}
+                        <div class="row">
+                            {% for book in recent_books %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex align-items-center recent-book-item">
+                                        <img src="{{ url_for('static', filename='uploads/' + book.cover_image) if book.cover_image != 'default_book.png' else url_for('static', filename='uploads/default_book.png') }}" 
+                                             class="book-thumb me-3" alt="{{ book.title }}">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">
+                                                <a href="{{ url_for('view_book', book_id=book.id) }}" class="text-decoration-none">
+                                                    {{ book.title }}
+                                                </a>
+                                            </h6>
+                                            <p class="small text-muted mb-1">by {{ book.author }}</p>
+                                            <small class="text-muted">{{ book.created_at.strftime('%B %d, %Y') }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-eye me-2"></i>View All Books
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No books added yet.</p>
+                            <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Your First Book
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Actions -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Book
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-tachometer-alt me-2"></i>View Dashboard
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="exportData()">
+                            <i class="fas fa-download me-2"></i>Export Library
+                        </button>
+                        <hr>
+                        <button class="btn btn-outline-warning" onclick="changePassword()">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </button>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Info -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Account Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="account-info">
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-user me-2 text-primary"></i>Username:</strong>
+                            <div class="mt-1">{{ current_user.username }}</div>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-envelope me-2 text-success"></i>Email:</strong>
+                            <div class="mt-1">{{ current_user.email }}</div>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-calendar-plus me-2 text-info"></i>Joined:</strong>
+                            <div class="mt-1">{{ current_user.created_at.strftime('%B %d, %Y') }}</div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <strong><i class="fas fa-chart-line me-2 text-warning"></i>Activity:</strong>
+                            <div class="mt-1">
+                                {% if total_books > 0 %}
+                                    Active member
+                                {% else %}
+                                    New member
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-download me-2"></i>Export Library
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Choose the format to export your library:</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="exportAs('json')">
+                        <i class="fas fa-code me-2"></i>JSON Format
+                    </button>
+                    <button class="btn btn-outline-success" onclick="exportAs('csv')">
+                        <i class="fas fa-file-csv me-2"></i>CSV Format
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="passwordForm">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" required minlength="6">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="passwordForm" class="btn btn-warning">
+                    <i class="fas fa-save me-2"></i>Update Password
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-avatar {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+}
+
+.stat-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.stat-icon {
+    opacity: 0.8;
+}
+
+.book-thumb {
+    width: 50px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.recent-book-item {
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.recent-book-item:hover {
+    background-color: #f8f9fa;
+}
+
+.info-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.75rem;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.btn-primary,
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<script>
+function exportData() {
+    const exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
+    exportModal.show();
+}
+
+function exportAs(format) {
+    // This would typically make an API call to export data
+    fetch('/api/books')
+        .then(response => response.json())
+        .then(data => {
+            let exportData;
+            let filename;
+            let mimeType;
+            
+            if (format === 'json') {
+                exportData = JSON.stringify(data, null, 2);
+                filename = 'my_library.json';
+                mimeType = 'application/json';
+            } else if (format === 'csv') {
+                // Convert to CSV
+                const headers = ['Title', 'Author', 'Genre', 'Rating'];
+                const csvContent = [
+                    headers.join(','),
+                    ...data.map(book => [
+                        `"${book.title.replace(/"/g, '""')}"`,
+                        `"${book.author.replace(/"/g, '""')}"`,
+                        `"${book.genre.replace(/"/g, '""')}"`,
+                        book.rating || ''
+                    ].join(','))
+                ].join('\n');
+                
+                exportData = csvContent;
+                filename = 'my_library.csv';
+                mimeType = 'text/csv';
+            }
+            
+            // Download file
+            const blob = new Blob([exportData], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
+        })
+        .catch(error => {
+            console.error('Error exporting data:', error);
+            alert('Error exporting data. Please try again.');
+        });
+}
+
+function changePassword() {
+    const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+    passwordModal.show();
+}
+
+// Password form validation
+document.getElementById('passwordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        alert('New passwords do not match!');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        alert('Password must be at least 6 characters long!');
+        return;
+    }
+    
+    // Here you would typically make an API call to change the password
+    alert('Password change functionality would be implemented here.');
+    bootstrap.Modal.getInstance(document.getElementById('passwordModal')).hide();
+    
+    // Reset form
+    this.reset();
+});
+
+// Animate stats on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.stat-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = `all 0.6s ease ${index * 0.1}s`;
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %}

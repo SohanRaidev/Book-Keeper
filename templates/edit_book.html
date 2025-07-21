@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ book.title }} - BookKeeper{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{{ url_for('view_book', book_id=book.id) }}" class="btn btn-outline-secondary me-3">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="fas fa-edit me-2 text-warning"></i>Edit Book
+                    </h1>
+                    <p class="text-muted mb-0">Update "{{ book.title }}" details</p>
+                </div>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>Update Book Details
+                    </h5>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label for="title" class="form-label fw-semibold required">
+                                        <i class="fas fa-book me-2"></i>Book Title
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" id="title" name="title" 
+                                           required maxlength="200" value="{{ book.title }}">
+                                    <div class="invalid-feedback">
+                                        Please provide a book title.
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="author" class="form-label fw-semibold required">
+                                        <i class="fas fa-user-edit me-2"></i>Author
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" id="author" name="author" 
+                                           required maxlength="100" value="{{ book.author }}">
+                                    <div class="invalid-feedback">
+                                        Please provide the author name.
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-8 mb-4">
+                                        <label for="genre" class="form-label fw-semibold required">
+                                            <i class="fas fa-tags me-2"></i>Genre
+                                        </label>
+                                        <select class="form-select form-select-lg" id="genre" name="genre" required>
+                                            <option value="">Select a genre</option>
+                                            {% set genres = ["Fiction", "Non-Fiction", "Mystery", "Romance", "Science Fiction", "Fantasy", "Biography", "History", "Self-Help", "Business", "Technology", "Health", "Travel", "Art", "Philosophy", "Other"] %}
+                                            {% for genre in genres %}
+                                                <option value="{{ genre }}" {{ 'selected' if genre == book.genre else '' }}>
+                                                    {{ genre }}
+                                                </option>
+                                            {% endfor %}
+                                            {% if book.genre not in genres %}
+                                                <option value="{{ book.genre }}" selected>{{ book.genre }}</option>
+                                            {% endif %}
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Please select a genre.
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4 mb-4">
+                                        <label for="rating" class="form-label fw-semibold">
+                                            <i class="fas fa-star me-2"></i>Rating
+                                        </label>
+                                        <select class="form-select form-select-lg" id="rating" name="rating">
+                                            <option value="">No rating</option>
+                                            {% for i in range(1, 6) %}
+                                                <option value="{{ i }}" {{ 'selected' if book.rating == i else '' }}>
+                                                    {{ "⭐" * i }} {{ i }} Star{{ 's' if i > 1 else '' }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-4">
+                                        <label for="year" class="form-label fw-semibold">
+                                            <i class="fas fa-calendar me-2"></i>Publication Year
+                                        </label>
+                                        <input type="text" class="form-control form-control-lg" id="year" name="year" 
+                                               maxlength="10" value="{{ book.year or '' }}">
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-4">
+                                        <label for="isbn" class="form-label fw-semibold">
+                                            <i class="fas fa-barcode me-2"></i>ISBN
+                                        </label>
+                                        <input type="text" class="form-control form-control-lg" id="isbn" name="isbn" 
+                                               maxlength="50" value="{{ book.isbn or '' }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column -->
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <label for="cover_image" class="form-label fw-semibold">
+                                        <i class="fas fa-image me-2"></i>Cover Image
+                                    </label>
+                                    
+                                    <!-- Current Cover Preview -->
+                                    <div class="current-cover mb-3">
+                                        <p class="small text-muted mb-2">Current cover:</p>
+                                        <img src="{{ url_for('static', filename='uploads/' + book.cover_image) if book.cover_image != 'default_book.png' else url_for('static', filename='uploads/default_book.png') }}" 
+                                             id="current-cover" class="img-thumbnail" style="max-height: 150px; max-width: 100px;"
+                                             onerror="this.src='/static/uploads/default_book.png'">>
+                                    </div>
+                                    
+                                    <div class="upload-area border-2 border-dashed rounded-3 p-4 text-center">
+                                        <input type="file" class="form-control d-none" id="cover_image" name="cover_image" 
+                                               accept="image/*" onchange="previewImage(this)">
+                                        <div id="upload-placeholder">
+                                            <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-3"></i>
+                                            <p class="mb-2">Click to upload new cover image</p>
+                                            <small class="text-muted">PNG, JPG, GIF up to 16MB (optional)</small>
+                                        </div>
+                                        <div id="image-preview" class="d-none">
+                                            <img id="preview-img" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px;">
+                                            <p class="mt-2 mb-0">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage()">
+                                                    <i class="fas fa-times me-1"></i>Remove
+                                                </button>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label for="description" class="form-label fw-semibold">
+                                        <i class="fas fa-align-left me-2"></i>Description
+                                    </label>
+                                    <textarea class="form-control" id="description" name="description" rows="8">{{ book.description or '' }}</textarea>
+                                    <div class="form-text">
+                                        <small class="text-muted">
+                                            <span id="char-count">{{ (book.description or '')|length }}</span> characters
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-3">
+                                    <a href="{{ url_for('view_book', book_id=book.id) }}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-warning btn-lg text-dark">
+                                        <i class="fas fa-save me-2"></i>Update Book
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.required::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.upload-area {
+    border-color: #dee2e6 !important;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: #ffc107 !important;
+    background-color: #fff3cd;
+}
+
+.upload-area.dragover {
+    border-color: #ffc107 !important;
+    background-color: #fff3cd;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.card-header {
+    border-bottom: none;
+    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+    border-radius: 15px 15px 0 0;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+    border: none;
+    color: #000;
+}
+
+.btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+    color: #000;
+}
+
+#preview-img,
+#current-cover {
+    max-height: 200px;
+    object-fit: cover;
+}
+
+.current-cover {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+</style>
+
+<script>
+// Image upload and preview
+document.querySelector('.upload-area').addEventListener('click', function() {
+    document.getElementById('cover_image').click();
+});
+
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('upload-placeholder').classList.add('d-none');
+            document.getElementById('image-preview').classList.remove('d-none');
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removeImage() {
+    document.getElementById('cover_image').value = '';
+    document.getElementById('upload-placeholder').classList.remove('d-none');
+    document.getElementById('image-preview').classList.add('d-none');
+}
+
+// Drag and drop functionality
+const uploadArea = document.querySelector('.upload-area');
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        document.getElementById('cover_image').files = files;
+        previewImage(document.getElementById('cover_image'));
+    }
+});
+
+// Character counter for description
+const descriptionTextarea = document.getElementById('description');
+const charCount = document.getElementById('char-count');
+
+descriptionTextarea.addEventListener('input', function() {
+    charCount.textContent = this.value.length;
+});
+
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        const forms = document.getElementsByClassName('needs-validation');
+        const validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Auto-focus on title field
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('title').focus();
+    document.getElementById('title').select();
+});
+
+// Custom genre input
+const genreSelect = document.getElementById('genre');
+genreSelect.addEventListener('change', function() {
+    if (this.value === 'Other') {
+        const customGenre = prompt('Please enter the genre:');
+        if (customGenre) {
+            const option = new Option(customGenre, customGenre, true, true);
+            this.add(option);
+        } else {
+            this.value = '{{ book.genre }}';
+        }
+    }
+});
+
+// Unsaved changes warning
+let formChanged = false;
+const form = document.querySelector('form');
+const originalValues = {};
+
+// Store original values
+form.querySelectorAll('input, select, textarea').forEach(field => {
+    originalValues[field.name] = field.value;
+});
+
+// Track changes
+form.addEventListener('input', function(e) {
+    if (originalValues[e.target.name] !== e.target.value) {
+        formChanged = true;
+    } else {
+        // Check if any field has changed
+        formChanged = false;
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            if (originalValues[field.name] !== field.value) {
+                formChanged = true;
+            }
+        });
+    }
+});
+
+// Warn before leaving if changes are unsaved
+window.addEventListener('beforeunload', function(e) {
+    if (formChanged) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Don't warn when form is submitted
+form.addEventListener('submit', function() {
+    formChanged = false;
+});
+</script>
+{% endblock %}

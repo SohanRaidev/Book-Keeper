@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - BookKeeper{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1">
+                        <i class="fas fa-tachometer-alt me-2 text-primary"></i>My Library
+                    </h1>
+                    <p class="text-muted mb-0">Welcome back, {{ current_user.username }}! You have {{ books|length }} book{{ 's' if books|length != 1 else '' }} in your collection.</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('add_book') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Add New Book
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" 
+                                       name="search" value="{{ current_search }}" 
+                                       placeholder="Search by title, author, or description...">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <select class="form-select" name="genre">
+                                <option value="">All Genres</option>
+                                {% for genre in genres %}
+                                    <option value="{{ genre }}" {{ 'selected' if genre == current_genre else '' }}>
+                                        {{ genre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <select class="form-select" name="sort">
+                                <option value="created_at" {{ 'selected' if current_sort == 'created_at' else '' }}>Newest First</option>
+                                <option value="title" {{ 'selected' if current_sort == 'title' else '' }}>Title A-Z</option>
+                                <option value="author" {{ 'selected' if current_sort == 'author' else '' }}>Author A-Z</option>
+                                <option value="rating" {{ 'selected' if current_sort == 'rating' else '' }}>Highest Rated</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary flex-grow-1">
+                                    <i class="fas fa-filter me-1"></i>Filter
+                                </button>
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Books Grid -->
+    {% if books %}
+        <div class="row" id="booksGrid">
+            {% for book in books %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 book-card" data-title="{{ book.title.lower() }}" data-author="{{ book.author.lower() }}" data-genre="{{ book.genre.lower() }}">
+                    <div class="card h-100 border-0 shadow-sm book-item">
+                        <div class="position-relative">
+                            <img src="{{ url_for('static', filename='uploads/' + book.cover_image) if book.cover_image != 'default_book.png' else url_for('static', filename='uploads/default_book.png') }}" 
+                                 class="card-img-top book-cover" alt="{{ book.title }}" 
+                                 onerror="this.src='/static/uploads/default_book.png'">>
+                            
+                            {% if book.rating %}
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    <span class="badge bg-warning text-dark rounded-pill">
+                                        <i class="fas fa-star me-1"></i>{{ "%.1f"|format(book.rating) }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="position-absolute bottom-0 start-0 end-0 book-overlay p-3">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{{ url_for('view_book', book_id=book.id) }}" class="btn btn-light btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-danger btn-sm" data-book-id="{{ book.id }}" data-book-title="{{ book.title }}" onclick="confirmDelete(this.dataset.bookId, this.dataset.bookTitle)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate" title="{{ book.title }}">{{ book.title }}</h5>
+                            <p class="card-text text-muted mb-2">
+                                <i class="fas fa-user me-1"></i>{{ book.author }}
+                            </p>
+                            <p class="card-text">
+                                <span class="badge bg-primary">{{ book.genre }}</span>
+                                {% if book.year %}
+                                    <span class="badge bg-secondary">{{ book.year }}</span>
+                                {% endif %}
+                            </p>
+                            {% if book.description %}
+                                <p class="card-text small text-muted book-description">
+                                    {{ book.description[:100] }}{{ '...' if book.description|length > 100 else '' }}
+                                </p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>Added {{ book.created_at.strftime('%B %d, %Y') }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination could be added here for large collections -->
+        
+    {% else %}
+        <!-- Empty State -->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-books fa-5x text-muted mb-4"></i>
+                        <h3 class="text-muted mb-3">
+                            {% if current_search or current_genre %}
+                                No books found matching your criteria
+                            {% else %}
+                                Your library is empty
+                            {% endif %}
+                        </h3>
+                        <p class="text-muted mb-4">
+                            {% if current_search or current_genre %}
+                                Try adjusting your search terms or filters to find what you're looking for.
+                            {% else %}
+                                Start building your digital library by adding your first book!
+                            {% endif %}
+                        </p>
+                        <div class="d-flex gap-3 justify-content-center">
+                            {% if current_search or current_genre %}
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-times me-2"></i>Clear Filters
+                                </a>
+                            {% endif %}
+                            <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Your First Book
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong id="bookTitle"></strong>"?</p>
+                <p class="text-muted small mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="deleteForm" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Book
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.book-cover {
+    height: 250px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.book-item {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.book-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.book-item:hover .book-cover {
+    transform: scale(1.05);
+}
+
+.book-overlay {
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.book-item:hover .book-overlay {
+    opacity: 1;
+}
+
+.book-description {
+    line-height: 1.4;
+}
+
+.empty-state i {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control:focus + .input-group-text,
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+</style>
+
+<script>
+function confirmDelete(bookId, bookTitle) {
+    document.getElementById('bookTitle').textContent = bookTitle;
+    document.getElementById('deleteForm').action = '/delete_book/' + bookId;
+    
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+
+// Live search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="search"]');
+    const bookCards = document.querySelectorAll('.book-card');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            bookCards.forEach(card => {
+                const title = card.dataset.title;
+                const author = card.dataset.author;
+                const genre = card.dataset.genre;
+                
+                if (title.includes(searchTerm) || author.includes(searchTerm) || genre.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // Auto-submit form on filter change
+    const genreSelect = document.querySelector('select[name="genre"]');
+    const sortSelect = document.querySelector('select[name="sort"]');
+    
+    [genreSelect, sortSelect].forEach(select => {
+        if (select) {
+            select.addEventListener('change', function() {
+                this.form.submit();
+            });
+        }
+    });
+});
+
+// Smooth animations for cards
+document.querySelectorAll('.book-item').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+    });
+});
+</script>
+{% endblock %}

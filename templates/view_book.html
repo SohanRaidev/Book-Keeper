@@ -1,0 +1,732 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - BookKeeper{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-3">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="flex-grow-1">
+            <h1 class="h2 mb-1">{{ book.title }}</h1>
+            <p class="text-muted mb-0">by {{ book.author }}</p>
+            <small class="text-muted">
+                <i class="fas fa-user me-1"></i>Shared by {{ book.owner.username }}
+                <span class="mx-2">•</span>
+                <i class="fas fa-calendar me-1"></i>{{ book.created_at.strftime('%B %d, %Y') }}
+            </small>
+        </div>
+        
+        <!-- Like Button and Social Actions -->
+        <div class="d-flex gap-2 align-items-center">
+            {% if current_user.is_authenticated %}
+                <button class="btn btn-outline-danger like-btn" 
+                        data-book-id="{{ book.id }}" 
+                        data-liked="{{ 'true' if book.is_liked_by(current_user) else 'false' }}">
+                    <i class="fas fa-heart {{ 'text-danger' if book.is_liked_by(current_user) else '' }}"></i>
+                    <span class="likes-count">{{ book.get_likes_count() }}</span>
+                </button>
+                
+                <!-- Only show edit/delete for book owner -->
+                {% if current_user.id == book.user_id %}
+                    <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </a>
+                    <button class="btn btn-danger" data-book-id="{{ book.id }}" data-book-title="{{ book.title }}" onclick="confirmDelete(this.dataset.bookId, this.dataset.bookTitle)">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                {% endif %}
+            {% else %}
+                <div class="d-flex align-items-center text-muted">
+                    <i class="fas fa-heart me-1"></i>{{ book.get_likes_count() }} likes
+                    <span class="mx-2">•</span>
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login to Like</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Book Cover and Basic Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="text-center p-4">
+                    <img src="{{ url_for('static', filename='uploads/' + book.cover_image) if book.cover_image != 'default_book.png' else url_for('static', filename='uploads/default_book.png') }}" 
+                         class="img-fluid rounded shadow book-cover-large" alt="{{ book.title }}"
+                         onerror="this.src='/static/uploads/default_book.png'">
+                </div>
+                
+                <div class="card-body">
+                    <div class="book-meta">
+                        {% if book.rating %}
+                            <div class="mb-3 text-center">
+                                <div class="rating-display">
+                                    {% for i in range(1, 6) %}
+                                        <i class="fas fa-star {{ 'text-warning' if i <= book.rating else 'text-muted' }}"></i>
+                                    {% endfor %}
+                                    <span class="ms-2 fw-bold">{{ "%.1f"|format(book.rating) }}/5</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-tag me-2 text-primary"></i>Genre:</strong>
+                            <span class="badge bg-primary ms-2">{{ book.genre }}</span>
+                        </div>
+                        
+                        {% if book.year %}
+                            <div class="info-item mb-3">
+                                <strong><i class="fas fa-calendar me-2 text-success"></i>Year:</strong>
+                                <span>{{ book.year }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if book.isbn %}
+                            <div class="info-item mb-3">
+                                <strong><i class="fas fa-barcode me-2 text-info"></i>ISBN:</strong>
+                                <span class="font-monospace">{{ book.isbn }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Social Stats -->
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-heart me-2 text-danger"></i>Likes:</strong>
+                            <span>{{ book.get_likes_count() }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-comments me-2 text-primary"></i>Comments:</strong>
+                            <span>{{ book.get_comments_count() }}</span>
+                        </div>
+                        
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-calendar-plus me-2 text-secondary"></i>Added:</strong>
+                            <span>{{ book.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        
+                        {% if book.updated_at != book.created_at %}
+                            <div class="info-item mb-3">
+                                <strong><i class="fas fa-edit me-2 text-warning"></i>Updated:</strong>
+                                <span>{{ book.updated_at.strftime('%B %d, %Y') }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Book Details and Comments -->
+        <div class="col-lg-8">
+            <!-- Book Description -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Book Details
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    {% if book.description %}
+                        <div class="mb-4">
+                            <h4 class="h6 text-primary mb-3">
+                                <i class="fas fa-align-left me-2"></i>Description
+                            </h4>
+                            <div class="book-description">
+                                {{ book.description|nl2br|safe }}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="mb-4">
+                            <h4 class="h6 text-muted mb-3">
+                                <i class="fas fa-align-left me-2"></i>Description
+                            </h4>
+                            <p class="text-muted fst-italic">No description available for this book.</p>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Quick Stats -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h4 class="h6 text-primary mb-3">
+                                <i class="fas fa-chart-bar me-2"></i>Quick Info
+                            </h4>
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <div class="stat-card bg-light p-3 rounded">
+                                        <div class="d-flex align-items-center">
+                                            <div class="stat-icon me-3">
+                                                <i class="fas fa-user-edit fa-2x text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <div class="stat-label text-muted small">Author</div>
+                                                <div class="stat-value fw-bold">{{ book.author }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-sm-6">
+                                    <div class="stat-card bg-light p-3 rounded">
+                                        <div class="d-flex align-items-center">
+                                            <div class="stat-icon me-3">
+                                                <i class="fas fa-user fa-2x text-info"></i>
+                                            </div>
+                                            <div>
+                                                <div class="stat-label text-muted small">Shared by</div>
+                                                <div class="stat-value fw-bold">{{ book.owner.username }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if book.year %}
+                                    <div class="col-sm-6">
+                                        <div class="stat-card bg-light p-3 rounded">
+                                            <div class="d-flex align-items-center">
+                                                <div class="stat-icon me-3">
+                                                    <i class="fas fa-calendar fa-2x text-warning"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="stat-label text-muted small">Publication Year</div>
+                                                    <div class="stat-value fw-bold">{{ book.year }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if book.rating %}
+                                    <div class="col-sm-6">
+                                        <div class="stat-card bg-light p-3 rounded">
+                                            <div class="d-flex align-items-center">
+                                                <div class="stat-icon me-3">
+                                                    <i class="fas fa-star fa-2x text-warning"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="stat-label text-muted small">Rating</div>
+                                                    <div class="stat-value fw-bold">{{ "%.1f"|format(book.rating) }}/5</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comments Section -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-comments me-2"></i>Comments
+                        <span class="badge bg-primary ms-2">{{ book.get_comments_count() }}</span>
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Add Comment Form (for authenticated users) -->
+                    {% if current_user.is_authenticated %}
+                        <div class="mb-4">
+                            <form id="commentForm">
+                                <div class="mb-3">
+                                    <label for="commentText" class="form-label">Add a comment</label>
+                                    <textarea class="form-control" id="commentText" rows="3" 
+                                              placeholder="Share your thoughts about this book..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-comment me-2"></i>Post Comment
+                                </button>
+                            </form>
+                        </div>
+                        <hr>
+                    {% else %}
+                        <div class="text-center mb-4 p-3 bg-light rounded">
+                            <p class="mb-2">Want to join the conversation?</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary">Login to Comment</a>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Comments List -->
+                    <div id="commentsList">
+                        {% if comments %}
+                            {% for comment in comments %}
+                                <div class="comment-item mb-3 p-3 border rounded" data-comment-id="{{ comment.id }}">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="comment-avatar me-3">
+                                                <i class="fas fa-user-circle fa-2x text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">{{ comment.user.username }}</h6>
+                                                <small class="text-muted">{{ comment.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                            </div>
+                                        </div>
+                                        {% if current_user.is_authenticated and current_user.id == comment.user_id %}
+                                            <button class="btn btn-outline-danger btn-sm delete-comment-btn" data-comment-id="{{ comment.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                    <div class="comment-content">
+                                        {{ comment.content|nl2br|safe }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center text-muted py-4" id="noComments">
+                                <i class="fas fa-comments fa-3x mb-3 opacity-50"></i>
+                                <p>No comments yet. Be the first to share your thoughts!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                            <span class="badge bg-primary ms-2">{{ book.genre }}</span>
+                        </div>
+                        
+                        {% if book.year %}
+                            <div class="info-item mb-3">
+                                <strong><i class="fas fa-calendar me-2 text-success"></i>Year:</strong>
+                                <span>{{ book.year }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if book.isbn %}
+                            <div class="info-item mb-3">
+                                <strong><i class="fas fa-barcode me-2 text-info"></i>ISBN:</strong>
+                                <span class="font-monospace">{{ book.isbn }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="info-item mb-3">
+                            <strong><i class="fas fa-calendar-plus me-2 text-secondary"></i>Added:</strong>
+                            <span>{{ book.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        
+                        {% if book.updated_at != book.created_at %}
+                            <div class="info-item mb-3">
+                                <strong><i class="fas fa-edit me-2 text-warning"></i>Updated:</strong>
+                                <span>{{ book.updated_at.strftime('%B %d, %Y') }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if current_user.is_authenticated and current_user.id == book.user_id %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong id="bookTitle"></strong>"?</p>
+                <p class="text-muted small mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="deleteForm" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Book
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.book-cover-large {
+    max-height: 400px;
+    max-width: 100%;
+    object-fit: cover;
+}
+
+.book-description {
+    line-height: 1.6;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.rating-display {
+    font-size: 1.2em;
+}
+
+.info-item {
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.75rem;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.stat-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    opacity: 0.8;
+}
+
+.stat-label {
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1.1em;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.badge {
+    font-size: 0.9em;
+    padding: 0.5em 0.75em;
+}
+
+.like-btn {
+    transition: all 0.3s ease;
+}
+
+.like-btn:hover {
+    transform: scale(1.05);
+}
+
+.comment-item {
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+    background: #e9ecef;
+}
+
+.comment-avatar {
+    flex-shrink: 0;
+}
+
+.delete-comment-btn {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.comment-item:hover .delete-comment-btn {
+    opacity: 1;
+}
+
+/* Custom filter for better text readability */
+.book-description {
+    text-align: justify;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .book-cover-large {
+        max-height: 300px;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .like-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .btn, .modal {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+
+<script>
+// Like functionality
+function toggleLike(bookId) {
+    const isAuthenticated = document.body.dataset.authenticated === 'true';
+    
+    if (isAuthenticated) {
+        fetch(`/api/like/${bookId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const likeBtn = document.querySelector('.like-btn');
+                const heartIcon = likeBtn.querySelector('i');
+                const likesCount = likeBtn.querySelector('.likes-count');
+                
+                if (data.liked) {
+                    heartIcon.classList.add('text-danger');
+                    likeBtn.classList.remove('btn-outline-danger');
+                    likeBtn.classList.add('btn-danger');
+                } else {
+                    heartIcon.classList.remove('text-danger');
+                    likeBtn.classList.remove('btn-danger');
+                    likeBtn.classList.add('btn-outline-danger');
+                }
+                
+                likesCount.textContent = data.likes_count;
+                likeBtn.dataset.liked = data.liked ? 'true' : 'false';
+                
+                // Update sidebar stats
+                const sidebarLikes = document.querySelector('.info-item .fa-heart').parentNode;
+                sidebarLikes.innerHTML = `<strong><i class="fas fa-heart me-2 text-danger"></i>Likes:</strong> <span>${data.likes_count}</span>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    } else {
+        window.location.href = '/login';
+    }
+}
+
+// Comment functionality
+function addComment() {
+    const commentText = document.getElementById('commentText').value.trim();
+    const bookId = document.body.dataset.bookId;
+    
+    if (!commentText) {
+        alert('Please enter a comment');
+        return;
+    }
+    
+    fetch(`/api/comment/${bookId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            content: commentText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Clear the form
+            document.getElementById('commentText').value = '';
+            
+            // Add new comment to the list
+            const commentsList = document.getElementById('commentsList');
+            const noComments = document.getElementById('noComments');
+            if (noComments) {
+                noComments.remove();
+            }
+            
+            const newComment = document.createElement('div');
+            newComment.className = 'comment-item mb-3 p-3 border rounded';
+            newComment.dataset.commentId = data.comment.id;
+            newComment.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="comment-avatar me-3">
+                            <i class="fas fa-user-circle fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">${data.comment.username}</h6>
+                            <small class="text-muted">Just now</small>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm delete-comment-btn" data-comment-id="${data.comment.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="comment-content">
+                    ${data.comment.content.replace(/\n/g, '<br>')}
+                </div>
+            `;
+            
+            commentsList.insertBefore(newComment, commentsList.firstChild);
+            
+            // Update comment count in header
+            const commentBadge = document.querySelector('.card-header .badge');
+            commentBadge.textContent = data.total_comments;
+            
+            // Update sidebar stats
+            const sidebarComments = document.querySelector('.info-item .fa-comments').parentNode;
+            sidebarComments.innerHTML = `<strong><i class="fas fa-comments me-2 text-primary"></i>Comments:</strong> <span>${data.total_comments}</span>`;
+            
+            // Add event listener to new delete button
+            const deleteBtn = newComment.querySelector('.delete-comment-btn');
+            deleteBtn.addEventListener('click', function() {
+                deleteComment(this.dataset.commentId);
+            });
+        } else {
+            alert(data.message || 'Failed to add comment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to add comment');
+    });
+}
+
+function deleteComment(commentId) {
+    if (!confirm('Are you sure you want to delete this comment?')) {
+        return;
+    }
+    
+    fetch(`/api/comment/${commentId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove comment from UI
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            commentElement.remove();
+            
+            // Update comment count
+            const commentBadge = document.querySelector('.card-header .badge');
+            const newCount = parseInt(commentBadge.textContent) - 1;
+            commentBadge.textContent = newCount;
+            
+            // Update sidebar stats
+            const sidebarComments = document.querySelector('.info-item .fa-comments').parentNode;
+            sidebarComments.innerHTML = `<strong><i class="fas fa-comments me-2 text-primary"></i>Comments:</strong> <span>${newCount}</span>`;
+            
+            // Show no comments message if needed
+            if (newCount === 0) {
+                const commentsList = document.getElementById('commentsList');
+                commentsList.innerHTML = `
+                    <div class="text-center text-muted py-4" id="noComments">
+                        <i class="fas fa-comments fa-3x mb-3 opacity-50"></i>
+                        <p>No comments yet. Be the first to share your thoughts!</p>
+                    </div>
+                `;
+            }
+        } else {
+            alert(data.message || 'Failed to delete comment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to delete comment');
+    });
+}
+
+function confirmDelete(bookId, bookTitle) {
+    document.getElementById('bookTitle').textContent = bookTitle;
+    document.getElementById('deleteForm').action = '/delete_book/' + bookId;
+    
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Set authentication status and book ID
+    document.body.dataset.authenticated = '{{ "true" if current_user.is_authenticated else "false" }}';
+    document.body.dataset.bookId = '{{ book.id }}';
+    
+    // Like button handler
+    const likeBtn = document.querySelector('.like-btn');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            const bookId = this.dataset.bookId;
+            toggleLike(bookId);
+        });
+    }
+    
+    // Comment form handler
+    const commentForm = document.getElementById('commentForm');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addComment();
+        });
+    }
+    
+    // Delete comment buttons
+    document.querySelectorAll('.delete-comment-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            deleteComment(this.dataset.commentId);
+        });
+    });
+    
+    // Animate stat cards on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.6s ease';
+        observer.observe(card);
+    });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    const isOwner = '{{ "true" if current_user.is_authenticated and current_user.id == book.user_id else "false" }}' === 'true';
+    
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'e':
+                if (isOwner) {
+                    e.preventDefault();
+                    window.location.href = '/edit_book/{{ book.id }}';
+                }
+                break;
+            case 'Backspace':
+                e.preventDefault();
+                window.location.href = '/';
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}
