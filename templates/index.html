@@ -1,65 +1,94 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="hero-section bg-primary text-white py-5">
+<!-- Enhanced Hero Section with Animations -->
+<div class="hero-section bg-gradient-primary py-5" data-aos="fade-in">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">
-                    <i class="fas fa-book-open me-3"></i>Discover Amazing Books
+        <div class="row align-items-center min-vh-50">
+            <div class="col-lg-6" data-aos="fade-right" data-aos-duration="1000">
+                <h1 class="display-4 fw-bold mb-4 text-gradient">
+                    <i class="fas fa-book-open me-3 hover-glow"></i>Discover Amazing Books
                 </h1>
-                <p class="lead mb-4">
-                    Browse thousands of books shared by our community. Discover your next favorite read, 
-                    like books you love, and share your thoughts with fellow book enthusiasts.
+                <p class="lead mb-4" style="color: var(--dark-color); font-weight: 500;">
+                    Browse thousands of books shared by our vibrant community. Discover your next favorite read, 
+                    like books you love, and share your thoughts with fellow book enthusiasts around the world.
                 </p>
-                <div class="d-flex gap-3">
+                <div class="d-flex gap-3 flex-wrap">
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('add_book') }}" class="btn btn-light btn-lg px-4">
+                        <a href="{{ url_for('add_book') }}" class="btn btn-primary btn-lg px-4 hover-lift" 
+                           data-aos="zoom-in" data-aos-delay="200">
                             <i class="fas fa-plus me-2"></i>Add Your Book
                         </a>
-                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-lg px-4">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-lg px-4 hover-lift" 
+                           data-aos="zoom-in" data-aos-delay="300">
                             <i class="fas fa-tachometer-alt me-2"></i>My Library
                         </a>
                     {% else %}
-                        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-4">
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 hover-lift" 
+                           data-aos="zoom-in" data-aos-delay="200">
                             <i class="fas fa-user-plus me-2"></i>Join Community
                         </a>
-                        <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4">
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4 hover-lift" 
+                           data-aos="zoom-in" data-aos-delay="300">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </a>
                     {% endif %}
                 </div>
             </div>
-            <div class="col-lg-6 text-center">
-                <div class="hero-image">
-                    <i class="fas fa-books fa-10x opacity-75"></i>
+            <div class="col-lg-6 text-center" data-aos="fade-left" data-aos-duration="1000">
+                <div class="hero-image position-relative">
+                    <div class="floating-books">
+                        <i class="fas fa-book fa-3x text-primary opacity-75 position-absolute" 
+                           style="top: 20%; left: 20%; animation: floating 6s ease-in-out infinite;"></i>
+                        <i class="fas fa-book-open fa-4x text-primary opacity-50 position-absolute" 
+                           style="top: 60%; right: 20%; animation: floating 8s ease-in-out infinite reverse;"></i>
+                        <i class="fas fa-bookmark fa-2x text-primary opacity-60 position-absolute" 
+                           style="top: 80%; left: 60%; animation: floating 7s ease-in-out infinite;"></i>
+                    </div>
+                    <i class="fas fa-books fa-10x text-gradient opacity-75 hover-glow"></i>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Search and Filter Section -->
-<div class="container py-4">
+<!-- Enhanced Search and Filter Section -->
+<div class="container py-5">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <form method="GET" class="row g-3">
-                        <div class="col-md-4">
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0">
-                                    <i class="fas fa-search text-muted"></i>
-                                </span>
-                                <input type="text" class="form-control border-start-0" 
-                                       name="search" value="{{ current_search }}" 
-                                       placeholder="Search books, authors, descriptions...">
-                            </div>
+            <div class="search-container glass rounded-xl" data-aos="fade-up">
+                <div class="row align-items-center mb-3">
+                    <div class="col-md-8">
+                        <h3 class="text-gradient mb-0">
+                            <i class="fas fa-search me-2"></i>Explore Our Library
+                        </h3>
+                        <p class="text-muted mb-0">Find your next great read from our community collection</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <span class="badge bg-primary">{{ books|length }} Books Available</span>
+                    </div>
+                </div>
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search text-primary"></i>
+                            </span>
+                            <input type="text" class="form-control" name="search" 
+                                   placeholder="Search books, authors..." 
+                                   value="{{ current_search }}"
+                                   data-bs-toggle="tooltip" data-bs-placement="top" 
+                                   title="Search by title, author, or description">
                         </div>
-                        
-                        <div class="col-md-3">
-                            <select class="form-select" name="genre">
+                    </div>
+                    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-filter text-primary"></i>
+                            </span>
+                            <select class="form-select" name="genre" 
+                                    data-bs-toggle="tooltip" data-bs-placement="top" 
+                                    title="Filter by genre">
                                 <option value="">All Genres</option>
                                 {% for genre in genres %}
                                     <option value="{{ genre }}" {{ 'selected' if genre == current_genre else '' }}>
@@ -68,310 +97,330 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        
-                        <div class="col-md-3">
-                            <select class="form-select" name="sort">
+                    </div>
+                    
+                    <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-sort text-primary"></i>
+                            </span>
+                            <select class="form-select" name="sort" 
+                                    data-bs-toggle="tooltip" data-bs-placement="top" 
+                                    title="Sort books by">
                                 <option value="created_at" {{ 'selected' if current_sort == 'created_at' else '' }}>Newest First</option>
-                                <option value="likes" {{ 'selected' if current_sort == 'likes' else '' }}>Most Liked</option>
                                 <option value="title" {{ 'selected' if current_sort == 'title' else '' }}>Title A-Z</option>
                                 <option value="author" {{ 'selected' if current_sort == 'author' else '' }}>Author A-Z</option>
                                 <option value="rating" {{ 'selected' if current_sort == 'rating' else '' }}>Highest Rated</option>
+                                <option value="likes" {{ 'selected' if current_sort == 'likes' else '' }}>Most Liked</option>
                             </select>
                         </div>
-                        
-                        <div class="col-md-2">
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary flex-grow-1">
-                                    <i class="fas fa-filter me-1"></i>Filter
-                                </button>
-                                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    
+                    <div class="col-md-2" data-aos="fade-up" data-aos-delay="400">
+                        <button type="submit" class="btn btn-primary w-100 hover-lift">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Books Catalog -->
+    <!-- Enhanced Books Catalog with Grid Animation -->
     {% if books %}
         <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="h4 mb-3">
-                    <i class="fas fa-book me-2 text-primary"></i>Community Library
-                    <span class="badge bg-primary ms-2">{{ books|length }} books</span>
-                </h2>
+            <div class="col-12" data-aos="fade-up">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h2 class="text-gradient mb-0">
+                        <i class="fas fa-book me-2"></i>Community Library
+                    </h2>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-gradient-primary">{{ books|length }} books</span>
+                        <div class="btn-group" role="group" aria-label="View toggle">
+                            <button type="button" class="btn btn-outline-primary active" id="gridView">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" id="listView">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <div class="row" id="booksGrid">
+        <div class="book-grid" id="booksGrid">
             {% for book in books %}
-                <div class="col-lg-3 col-md-4 col-sm-6 mb-4 book-card" data-title="{{ book.title.lower() }}" data-author="{{ book.author.lower() }}" data-genre="{{ book.genre.lower() }}">
-                    <div class="card h-100 border-0 shadow-sm book-item" data-book-id="{{ book.id }}">
-                        <div class="position-relative">
-                            <img src="{{ url_for('static', filename='uploads/' + book.cover_image) if book.cover_image != 'default_book.png' else url_for('static', filename='uploads/default_book.png') }}" 
-                                 class="card-img-top book-cover" alt="{{ book.title }}" 
-                                 onerror="this.src='/static/uploads/default_book.png'">
-                            
-                            <!-- Rating Badge -->
-                            {% if book.rating %}
-                                <div class="position-absolute top-0 end-0 m-2">
-                                    <span class="badge bg-warning text-dark rounded-pill">
-                                        <i class="fas fa-star me-1"></i>{{ "%.1f"|format(book.rating) }}
+                <div class="book-card stagger-animation hover-tilt" 
+                     data-title="{{ book.title.lower() }}" 
+                     data-author="{{ book.author.lower() }}" 
+                     data-genre="{{ book.genre.lower() }}"
+                     data-aos="fade-up" 
+                     data-aos-delay="{{ loop.index0 * 50 }}">
+                    <div class="card h-100 glass book-item" data-book-id="{{ book.id }}">
+                        <a href="{{ url_for('view_book', book_id=book.id) }}" class="text-decoration-none">
+                            <div class="position-relative overflow-hidden">
+                                <img src="{{ url_for('static', filename='uploads/' + book.cover_image) if book.cover_image != 'default_book.png' else url_for('static', filename='uploads/default_book.png') }}" 
+                                     class="book-cover" alt="{{ book.title }}" 
+                                     onerror="this.src='/static/uploads/default_book.png'"
+                                     loading="lazy">
+                                
+                                <!-- Enhanced Rating Badge -->
+                                {% if book.rating %}
+                                    <div class="position-absolute top-0 end-0 m-2">
+                                        <span class="badge bg-warning text-dark rounded-pill shadow-sm">
+                                            <div class="rating-stars">
+                                                {% for i in range(5) %}
+                                                    <i class="fas fa-star {{ 'text-warning' if i < book.rating else 'text-muted' }}"></i>
+                                                {% endfor %}
+                                            </div>
+                                            {{ "%.1f"|format(book.rating) }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Enhanced Book Owner Badge -->
+                                <div class="position-absolute top-0 start-0 m-2">
+                                    <span class="badge glass-primary text-primary rounded-pill">
+                                        <i class="fas fa-user me-1"></i>{{ book.owner.username }}
                                     </span>
                                 </div>
-                            {% endif %}
-                            
-                            <!-- Book Owner Badge -->
-                            <div class="position-absolute top-0 start-0 m-2">
-                                <span class="badge bg-dark bg-opacity-75 text-white rounded-pill">
-                                    <i class="fas fa-user me-1"></i>{{ book.owner.username }}
-                                </span>
                             </div>
-                            
-                            <!-- Like Button (only for logged-in users) -->
-                            {% if current_user.is_authenticated %}
-                                <div class="position-absolute bottom-0 end-0 m-2">
-                                    <button class="btn btn-light btn-sm like-btn" 
-                                            data-book-id="{{ book.id }}" 
-                                            data-liked="{{ 'true' if book.is_liked_by(current_user) else 'false' }}">
-                                        <i class="fas fa-heart {{ 'text-danger' if book.is_liked_by(current_user) else 'text-muted' }}"></i>
-                                        <span class="likes-count">{{ book.get_likes_count() }}</span>
-                                    </button>
-                                </div>
-                            {% endif %}
-                        </div>
+                        </a>
                         
                         <div class="card-body">
-                            <h5 class="card-title text-truncate" title="{{ book.title }}">{{ book.title }}</h5>
-                            <p class="card-text text-muted mb-2">
-                                <i class="fas fa-user-edit me-1"></i>{{ book.author }}
+                            <h6 class="card-title fw-bold mb-2 text-gradient">
+                                {{ book.title[:25] }}{{ '...' if book.title|length > 25 else '' }}
+                            </h6>
+                            <p class="card-text text-dark mb-2">
+                                <i class="fas fa-user me-1"></i>{{ book.author }}
                             </p>
-                            <p class="card-text">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <span class="badge bg-primary">{{ book.genre }}</span>
                                 {% if book.year %}
-                                    <span class="badge bg-secondary">{{ book.year }}</span>
+                                    <small class="text-dark">{{ book.year }}</small>
                                 {% endif %}
-                            </p>
-                            {% if book.description %}
-                                <p class="card-text small text-muted book-description">
-                                    {{ book.description[:100] }}{{ '...' if book.description|length > 100 else '' }}
-                                </p>
-                            {% endif %}
-                            
-                            <!-- Stats -->
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <small class="text-muted">
-                                    <i class="fas fa-heart me-1"></i>{{ book.get_likes_count() }} likes
-                                </small>
-                                <small class="text-muted">
-                                    <i class="fas fa-comments me-1"></i>{{ book.get_comments_count() }} comments
-                                </small>
                             </div>
                         </div>
                         
-                        <div class="card-footer bg-transparent border-0 pt-0">
-                            <small class="text-muted">
-                                <i class="fas fa-calendar me-1"></i>Added {{ book.created_at.strftime('%B %d, %Y') }}
-                            </small>
+                        <div class="card-footer border-0 glass-primary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-dark">
+                                    <i class="fas fa-calendar me-1"></i>{{ book.created_at.strftime('%b %d, %Y') }}
+                                </small>
+                                <div class="d-flex gap-1 align-items-center">
+                                    {% if current_user.is_authenticated %}
+                                        <button class="btn btn-light btn-sm like-btn hover-glow rounded-pill" 
+                                                data-book-id="{{ book.id }}" 
+                                                data-liked="{{ 'true' if book.is_liked_by(current_user) else 'false' }}"
+                                                data-bs-toggle="tooltip" 
+                                                data-bs-placement="top" 
+                                                title="{{ 'Unlike' if book.is_liked_by(current_user) else 'Like' }} this book">
+                                            <i class="fas fa-heart {{ 'text-danger' if book.is_liked_by(current_user) else 'text-muted' }}"></i>
+                                            <span class="likes-count">{{ book.get_likes_count() }}</span>
+                                        </button>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-heart me-1"></i>{{ book.get_likes_count() }}
+                                        </span>
+                                    {% endif %}
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-comment me-1"></i>{{ book.comments|length }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         </div>
-        
     {% else %}
-        <!-- Empty State -->
-        <div class="row">
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <div class="empty-state">
-                        <i class="fas fa-books fa-5x text-muted mb-4"></i>
-                        <h3 class="text-muted mb-3">
-                            {% if current_search or current_genre %}
-                                No books found matching your criteria
-                            {% else %}
-                                No books in the community yet
-                            {% endif %}
-                        </h3>
-                        <p class="text-muted mb-4">
-                            {% if current_search or current_genre %}
-                                Try adjusting your search terms or filters to find what you're looking for.
-                            {% else %}
-                                Be the first to share a book with the community!
-                            {% endif %}
-                        </p>
-                        <div class="d-flex gap-3 justify-content-center">
-                            {% if current_search or current_genre %}
-                                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-times me-2"></i>Clear Filters
-                                </a>
-                            {% endif %}
-                            {% if current_user.is_authenticated %}
-                                <a href="{{ url_for('add_book') }}" class="btn btn-primary">
-                                    <i class="fas fa-plus me-2"></i>Add First Book
-                                </a>
-                            {% else %}
-                                <a href="{{ url_for('register') }}" class="btn btn-primary">
-                                    <i class="fas fa-user-plus me-2"></i>Join to Add Books
-                                </a>
-                            {% endif %}
-                        </div>
+        <!-- Enhanced Empty State -->
+        <div class="text-center py-5" data-aos="fade-up">
+            <div class="glass rounded-xl p-5 mx-auto" style="max-width: 600px;">
+                <div class="empty-state">
+                    <div class="mb-4">
+                        <i class="fas fa-book-open fa-5x text-primary opacity-50 hover-glow"></i>
                     </div>
+                    <h3 class="text-gradient mb-3">No Books Found</h3>
+                    <p class="text-muted mb-4 lead">
+                        {% if current_search or current_genre %}
+                            We couldn't find any books matching your search criteria. Try adjusting your filters or search terms.
+                        {% else %}
+                            The community library is waiting for its first book! Be the pioneer and add the first book to our collection.
+                        {% endif %}
+                    </p>
+                    <div class="d-flex gap-3 justify-content-center flex-wrap">
+                        {% if current_search or current_genre %}
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg hover-lift">
+                                <i class="fas fa-refresh me-2"></i>Clear Filters
+                            </a>
+                        {% endif %}
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('add_book') }}" class="btn btn-primary btn-lg hover-lift">
+                                <i class="fas fa-plus me-2"></i>Add First Book
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg hover-lift">
+                                <i class="fas fa-user-plus me-2"></i>Join Community
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Quick Stats Section -->
+    {% if books %}
+        <div class="row mt-5 pt-5" data-aos="fade-up">
+            <div class="col-12">
+                <h3 class="text-gradient text-center mb-4">Community Statistics</h3>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="stat-card text-center hover-lift">
+                    <div class="stat-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stat-number">{{ books|length }}</div>
+                    <div class="stat-label">Total Books</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="stat-card text-center hover-lift">
+                    <div class="stat-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-number">{{ genres|length }}</div>
+                    <div class="stat-label">Genres</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="stat-card text-center hover-lift">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">{{ books | map(attribute='owner') | list | unique | list | length }}</div>
+                    <div class="stat-label">Contributors</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="stat-card text-center hover-lift">
+                    <div class="stat-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-number">{{ "%.1f"|format(books | selectattr('rating') | map(attribute='rating') | list | sum / (books | selectattr('rating') | list | length) if books | selectattr('rating') | list else 0) }}</div>
+                    <div class="stat-label">Avg Rating</div>
                 </div>
             </div>
         </div>
     {% endif %}
 </div>
 
-<style>
-.hero-section {
-    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
-}
-
-.book-cover {
-    height: 250px;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.book-item {
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.book-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
-
-.book-item:hover .book-cover {
-    transform: scale(1.05);
-}
-
-.like-btn {
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    font-size: 0.8rem;
-}
-
-.like-btn:hover {
-    transform: scale(1.1);
-}
-
-.badge {
-    font-size: 0.75em;
-}
-
-.hero-image i {
-    animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-}
-
-.empty-state i {
-    animation: float 3s ease-in-out infinite;
-}
-</style>
-
+<!-- Enhanced JavaScript for Interactive Features -->
+{% block extra_js %}
 <script>
-// Open book details in modal
-function openBookModal(bookId) {
-    window.location.href = '/book/' + bookId;
-}
-
-// Toggle like function
-function toggleLike(bookId) {
-    // Check if user is authenticated
-    const isAuthenticated = document.body.dataset.authenticated === 'true';
-    
-    if (isAuthenticated) {
-        fetch(`/api/like/${bookId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const likeBtn = document.querySelector(`[data-book-id="${bookId}"].like-btn`);
-                const heartIcon = likeBtn.querySelector('i');
-                const likesCount = likeBtn.querySelector('.likes-count');
-                
-                if (data.liked) {
-                    heartIcon.classList.remove('text-muted');
-                    heartIcon.classList.add('text-danger');
-                    likeBtn.dataset.liked = 'true';
-                } else {
-                    heartIcon.classList.remove('text-danger');
-                    heartIcon.classList.add('text-muted');
-                    likeBtn.dataset.liked = 'false';
-                }
-                
-                likesCount.textContent = data.likes_count;
-                
-                // Update stats in card footer
-                const card = likeBtn.closest('.book-item');
-                const statsLikes = card.querySelector('.card-body small i.fa-heart').parentNode;
-                statsLikes.innerHTML = `<i class="fas fa-heart me-1"></i>${data.likes_count} likes`;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    } else {
-        // Redirect to login if not authenticated
-        window.location.href = '/login';
-    }
-}
-
-// Auto-submit form on filter change
 document.addEventListener('DOMContentLoaded', function() {
-    const genreSelect = document.querySelector('select[name="genre"]');
-    const sortSelect = document.querySelector('select[name="sort"]');
-    
-    // Add click handlers for book cards
-    const bookCards = document.querySelectorAll('.book-item');
-    bookCards.forEach(card => {
-        card.addEventListener('click', function(e) {
-            // Don't navigate if clicking on like button
-            if (!e.target.closest('.like-btn')) {
-                const bookId = this.dataset.bookId;
-                openBookModal(bookId);
-            }
-        });
-    });
-    
-    // Add click handlers for like buttons
-    const likeButtons = document.querySelectorAll('.like-btn');
-    likeButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
+    // Enhanced Like Button Functionality
+    document.querySelectorAll('.like-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
+            
             const bookId = this.dataset.bookId;
-            toggleLike(bookId);
+            const icon = this.querySelector('i');
+            const countSpan = this.querySelector('.likes-count');
+            
+            // Add loading state
+            this.classList.add('loading');
+            icon.className = 'fas fa-spinner fa-spin';
+            
+            fetch(`/api/like/${bookId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update UI with animation
+                    if (data.liked) {
+                        icon.className = 'fas fa-heart text-danger';
+                        this.classList.add('success-animation');
+                    } else {
+                        icon.className = 'fas fa-heart text-muted';
+                    }
+                    countSpan.textContent = data.likes_count;
+                    this.dataset.liked = data.liked;
+                    
+                    // Update tooltip
+                    const tooltip = bootstrap.Tooltip.getInstance(this);
+                    if (tooltip) {
+                        tooltip.setContent({'.tooltip-inner': data.liked ? 'Unlike this book' : 'Like this book'});
+                    }
+                }
+                this.classList.remove('loading');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                icon.className = 'fas fa-heart text-muted';
+                this.classList.remove('loading');
+            });
         });
     });
-    
-    // Auto-submit form on filter change
-    [genreSelect, sortSelect].forEach(select => {
-        if (select) {
-            select.addEventListener('change', function() {
-                this.form.submit();
+
+    // View Toggle Functionality
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+    const booksGrid = document.getElementById('booksGrid');
+
+    if (gridView && listView && booksGrid) {
+        listView.addEventListener('click', function() {
+            booksGrid.className = 'row';
+            gridView.classList.remove('active');
+            this.classList.add('active');
+            
+            // Adjust book cards for list view
+            document.querySelectorAll('.book-card').forEach(card => {
+                card.className = 'col-12 book-card stagger-animation hover-lift mb-3';
             });
-        }
-    });
+        });
+
+        gridView.addEventListener('click', function() {
+            booksGrid.className = 'book-grid';
+            listView.classList.remove('active');
+            this.classList.add('active');
+            
+            // Reset book cards for grid view
+            document.querySelectorAll('.book-card').forEach((card, index) => {
+                card.className = 'book-card stagger-animation hover-tilt';
+                card.setAttribute('data-aos-delay', index * 50);
+            });
+        });
+    }
+
+    // Enhanced Search with Real-time Results
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const bookCards = document.querySelectorAll('.book-card');
+            
+            bookCards.forEach(card => {
+                const title = card.dataset.title;
+                const author = card.dataset.author;
+                const genre = card.dataset.genre;
+                
+                if (title.includes(query) || author.includes(query) || genre.includes(query)) {
+                    card.style.display = 'block';
+                    card.style.animation = 'fadeInUp 0.5s ease-out';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
 });
 </script>
 
@@ -379,4 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
     document.body.dataset.authenticated = '{{ "true" if current_user.is_authenticated else "false" }}';
 </script>
+{% endblock %}
+
 {% endblock %}

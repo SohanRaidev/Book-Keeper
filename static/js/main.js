@@ -1,4 +1,4 @@
-// BookKeeper JavaScript Functions
+// BookKeeper Enhanced JavaScript Functions
 
 // Global variables
 let searchTimeout;
@@ -10,50 +10,161 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    // Initialize tooltips
-    initializeTooltips();
-    
-    // Initialize search functionality
+    // Initialize all components
+    initializeAnimations();
+    initializeInteractiveElements();
     initializeSearch();
-    
-    // Initialize image lazy loading
     initializeLazyLoading();
-    
-    // Initialize keyboard shortcuts
     initializeKeyboardShortcuts();
-    
-    // Initialize theme toggle
     initializeThemeToggle();
-    
-    // Initialize auto-save for forms
     initializeAutoSave();
+    initializeParticles();
+    initializeScrollEffects();
     
-    console.log('BookKeeper initialized successfully');
+    console.log('🚀 BookKeeper Enhanced Edition initialized successfully');
 }
 
-// Initialize Bootstrap tooltips
-function initializeTooltips() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+// Initialize page animations
+function initializeAnimations() {
+    // Add stagger animation to book cards
+    const bookCards = document.querySelectorAll('.book-card');
+    bookCards.forEach((card, index) => {
+        card.classList.add('stagger-animation');
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+    
+    // Add entrance animations to form elements
+    const formGroups = document.querySelectorAll('.form-group, .mb-3');
+    formGroups.forEach((group, index) => {
+        group.classList.add('fade-in-up');
+        group.style.animationDelay = `${index * 0.1}s`;
+    });
+    
+    // Add card hover effects
+    initializeCardAnimations();
+}
+
+// Initialize card animations
+function initializeCardAnimations() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.classList.add('hover-lift');
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.classList.remove('hover-lift');
+        });
     });
 }
 
-// Enhanced search functionality
+// Initialize interactive elements
+function initializeInteractiveElements() {
+    // Add ripple effect to buttons
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(button => {
+        button.addEventListener('click', createRipple);
+    });
+    
+    // Add glow effect to interactive elements
+    const interactiveElements = document.querySelectorAll('.interactive, .hover-glow');
+    interactiveElements.forEach(element => {
+        element.addEventListener('mouseenter', function() {
+            this.style.boxShadow = '0 0 30px rgba(113, 201, 206, 0.6)';
+        });
+        
+        element.addEventListener('mouseleave', function() {
+            this.style.boxShadow = '';
+        });
+    });
+}
+
+// Create ripple effect
+function createRipple(event) {
+    const button = event.currentTarget;
+    const ripple = document.createElement('span');
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+    
+    ripple.style.position = 'absolute';
+    ripple.style.borderRadius = '50%';
+    ripple.style.transform = 'scale(0)';
+    ripple.style.animation = 'ripple 0.6s linear';
+    ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = x + 'px';
+    ripple.style.top = y + 'px';
+    ripple.style.pointerEvents = 'none';
+    
+    button.style.position = 'relative';
+    button.style.overflow = 'hidden';
+    button.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+// Initialize particle system
+function initializeParticles() {
+    const particleContainer = document.body;
+    const particleCount = 5;
+    
+    for (let i = 0; i < particleCount; i++) {
+        createParticle(particleContainer);
+    }
+}
+
+// Create floating particles
+function createParticle(container) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.top = Math.random() * 100 + '%';
+    particle.style.animationDelay = Math.random() * 4 + 's';
+    particle.style.animationDuration = (4 + Math.random() * 4) + 's';
+    
+    container.appendChild(particle);
+    
+    // Remove and recreate particle after animation
+    setTimeout(() => {
+        particle.remove();
+        createParticle(container);
+    }, 8000);
+}
+
+// Enhanced search functionality with animations
 function initializeSearch() {
     const searchInput = document.querySelector('input[name="search"]');
     if (!searchInput) return;
     
+    // Add search icon animation
+    const searchIcon = searchInput.parentNode.querySelector('i');
+    if (searchIcon) {
+        searchInput.addEventListener('focus', () => {
+            searchIcon.classList.add('fa-spin');
+        });
+        
+        searchInput.addEventListener('blur', () => {
+            searchIcon.classList.remove('fa-spin');
+        });
+    }
+    
     searchInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
         const query = this.value.trim();
+        
+        // Visual feedback for search
+        this.style.background = query ? 'rgba(113, 201, 206, 0.1)' : '';
         
         searchTimeout = setTimeout(() => {
             performSearch(query);
         }, SEARCH_DELAY);
     });
     
-    // Add search suggestions
+    // Add search suggestions with animation
     addSearchSuggestions(searchInput);
 }
 

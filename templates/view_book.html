@@ -11,8 +11,8 @@
         </a>
         <div class="flex-grow-1">
             <h1 class="h2 mb-1">{{ book.title }}</h1>
-            <p class="text-muted mb-0">by {{ book.author }}</p>
-            <small class="text-muted">
+            <p class="text-dark mb-0">by {{ book.author }}</p>
+            <small class="text-dark">
                 <i class="fas fa-user me-1"></i>Shared by {{ book.owner.username }}
                 <span class="mx-2">•</span>
                 <i class="fas fa-calendar me-1"></i>{{ book.created_at.strftime('%B %d, %Y') }}
@@ -121,9 +121,9 @@
         <div class="col-lg-8">
             <!-- Book Description -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h3 class="h5 mb-0">
-                        <i class="fas fa-info-circle me-2"></i>Book Details
+                <div class="card-header bg-white border-bottom">
+                    <h3 class="h5 mb-0 text-dark fw-bold">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>Book Details
                     </h3>
                 </div>
                 
@@ -161,7 +161,7 @@
                                             </div>
                                             <div>
                                                 <div class="stat-label text-muted small">Author</div>
-                                                <div class="stat-value fw-bold">{{ book.author }}</div>
+                                                <div class="stat-value fw-bold text-dark">{{ book.author }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -175,7 +175,7 @@
                                             </div>
                                             <div>
                                                 <div class="stat-label text-muted small">Shared by</div>
-                                                <div class="stat-value fw-bold">{{ book.owner.username }}</div>
+                                                <div class="stat-value fw-bold text-dark">{{ book.owner.username }}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -190,7 +190,7 @@
                                                 </div>
                                                 <div>
                                                     <div class="stat-label text-muted small">Publication Year</div>
-                                                    <div class="stat-value fw-bold">{{ book.year }}</div>
+                                                    <div class="stat-value fw-bold text-dark">{{ book.year }}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -206,7 +206,7 @@
                                                 </div>
                                                 <div>
                                                     <div class="stat-label text-muted small">Rating</div>
-                                                    <div class="stat-value fw-bold">{{ "%.1f"|format(book.rating) }}/5</div>
+                                                    <div class="stat-value fw-bold text-dark">{{ "%.1f"|format(book.rating) }}/5</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -220,9 +220,9 @@
             
             <!-- Comments Section -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h3 class="h5 mb-0">
-                        <i class="fas fa-comments me-2"></i>Comments
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0 text-dark fw-bold">
+                        <i class="fas fa-comments me-2 text-primary"></i>Comments
                         <span class="badge bg-primary ms-2">{{ book.get_comments_count() }}</span>
                     </h3>
                 </div>
