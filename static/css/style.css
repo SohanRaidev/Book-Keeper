@@ -3,7 +3,7 @@
 /* CSS Variables for consistent theming with your color palette */
 :root {
     /* Your Color Palette - More Vibrant */
-    --primary-color: #00B4D8;
+ --primary-color: #00B4D8;
     --primary-light: #0077B6;
     --primary-lighter: #023E8A;
     --primary-lightest: #CAF0F8;
@@ -16,7 +16,7 @@
     --danger-color: #e74c3c;
     --warning-color: #f39c12;
     --info-color: #00B4D8;
-    --light-color: #CAF0F8;
+    --light-color: #98e1f0;
     --dark-color: #264653;
     
     /* Enhanced Design System */
@@ -96,29 +96,15 @@ body::before {
     }
 }
 
-/* Typography with Animation */
+/* Typography with Static Gradients */
 h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     margin-bottom: 1.5rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    background: linear-gradient(135deg, #00B4D8, #0077B6, #023E8A);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     position: relative;
-    animation: shimmer 3s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-    0%, 100% { 
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-        -webkit-background-clip: text;
-        background-clip: text;
-    }
-    50% { 
-        background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
-        -webkit-background-clip: text;
-        background-clip: text;
-    }
 }
 
 .text-primary {
@@ -454,9 +440,6 @@ h1, h2, h3, h4, h5, h6 {
         transform: translateY(-5px);
     }
 }
-    padding: 1rem 1.25rem;
-    font-size: 1.1rem;
-}
 
 /* Enhanced Navigation with Glassmorphism */
 .navbar {
@@ -465,22 +448,47 @@ h1, h2, h3, h4, h5, h6 {
     border-bottom: 1px solid var(--glass-border);
     box-shadow: 0 2px 20px rgba(113, 201, 206, 0.15);
     transition: var(--transition);
+    z-index: 1050; /* Ensure navbar stays above other content */
 }
 
 .navbar.scrolled {
-    background: rgba(227, 253, 253, 0.95) !important;
-    backdrop-filter: blur(20px);
+    background: rgba(202, 240, 248, 0.95) !important;
+    backdrop-filter: blur(25px);
+    box-shadow: 0 4px 30px rgba(0, 180, 216, 0.2);
+    border-bottom: 1px solid rgba(0, 180, 216, 0.2);
+}
+
+.navbar.scrolled .navbar-brand,
+.navbar.scrolled .nav-link {
+    color: var(--dark-color) !important;
+}
+
+.navbar.scrolled .nav-link:hover {
+    background: rgba(0, 180, 216, 0.2) !important;
+    color: var(--dark-color) !important;
+}
+
+.navbar.scrolled .nav-link.active {
+    background: rgba(0, 180, 216, 0.25) !important;
+    color: var(--dark-color) !important;
 }
 
 .navbar-brand {
     font-size: 1.75rem;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    background: linear-gradient(135deg, #00B4D8, #0077B6, #023E8A);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     transition: var(--transition);
     position: relative;
+}
+
+.navbar.scrolled .navbar-brand {
+    background: linear-gradient(135deg, #00B4D8, #0077B6, #023E8A);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .navbar-brand:hover {
@@ -489,7 +497,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .navbar-brand i {
     animation: rotate 3s ease-in-out infinite;
-    color: var(--primary-color);
+    color: #00B4D8;
+}
+
+.navbar.scrolled .navbar-brand i {
+    color: #00B4D8;
 }
 
 @keyframes rotate {
@@ -1011,7 +1023,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Text Gradients */
 .text-gradient {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    background: linear-gradient(135deg, #00B4D8, #0077B6, #023E8A);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

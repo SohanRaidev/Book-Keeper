@@ -99,20 +99,12 @@
                                 </div>
                                 
                                 <div class="row">
-                                    <div class="col-md-6 mb-4">
+                                    <div class="col-md-12 mb-4">
                                         <label for="year" class="form-label fw-semibold">
                                             <i class="fas fa-calendar me-2"></i>Publication Year
                                         </label>
                                         <input type="text" class="form-control form-control-lg" id="year" name="year" 
                                                maxlength="10" placeholder="e.g., 2023">
-                                    </div>
-                                    
-                                    <div class="col-md-6 mb-4">
-                                        <label for="isbn" class="form-label fw-semibold">
-                                            <i class="fas fa-barcode me-2"></i>ISBN
-                                        </label>
-                                        <input type="text" class="form-control form-control-lg" id="isbn" name="isbn" 
-                                               maxlength="50" placeholder="e.g., 978-0123456789">
                                     </div>
                                 </div>
                             </div>
@@ -122,22 +114,64 @@
                                 <div class="mb-4">
                                     <label for="cover_image" class="form-label fw-semibold">
                                         <i class="fas fa-image me-2"></i>Cover Image
+                                        <span class="badge bg-info ms-2">
+                                            <i class="fas fa-magic me-1"></i>AI Powered
+                                        </span>
                                     </label>
                                     <div class="upload-area border-2 border-dashed rounded-3 p-4 text-center">
                                         <input type="file" class="form-control d-none" id="cover_image" name="cover_image" 
-                                               accept="image/*" onchange="previewImage(this)">
-                                        <div id="upload-placeholder">
+                                               accept="image/*" onchange="handleImageUpload(this)">
+                                        <div id="upload-placeholder" onclick="document.getElementById('cover_image').click()" style="cursor: pointer;">
                                             <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
-                                            <p class="mb-2">Click to upload cover image</p>
-                                            <small class="text-muted">PNG, JPG, GIF up to 16MB</small>
+                                            <p class="mb-2">
+                                                <strong>Click to upload cover image</strong>
+                                            </p>
+                                            <small class="text-muted">
+                                                PNG, JPG, GIF up to 16MB<br>
+                                                <span class="text-info">
+                                                    <i class="fas fa-robot me-1"></i>
+                                                    AI will automatically extract book details!
+                                                </span>
+                                            </small>
                                         </div>
                                         <div id="image-preview" class="d-none">
                                             <img id="preview-img" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px;">
                                             <p class="mt-2 mb-0">
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage()">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); removeImage()">
                                                     <i class="fas fa-times me-1"></i>Remove
                                                 </button>
+                                                <button type="button" class="btn btn-sm btn-info" id="analyze-btn" onclick="event.stopPropagation(); analyzeImage()">
+                                                    <i class="fas fa-magic me-1"></i>Analyze with AI
+                                                </button>
                                             </p>
+                                        </div>
+                                        <div id="analysis-loading" class="d-none">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2 mb-0">
+                                                <i class="fas fa-robot me-1"></i>
+                                                AI is analyzing your book cover...
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- AI Analysis Results -->
+                                    <div id="ai-results" class="d-none mt-3">
+                                        <div class="alert alert-info border-0">
+                                            <h6 class="alert-heading mb-2">
+                                                <i class="fas fa-robot me-2"></i>AI Analysis Results
+                                            </h6>
+                                            <p class="mb-2">AI has analyzed your book cover. Review and edit the information below:</p>
+                                            <div id="ai-extracted-info"></div>
+                                            <div class="mt-2">
+                                                <button type="button" class="btn btn-sm btn-success" onclick="applyAIResults()">
+                                                    <i class="fas fa-check me-1"></i>Apply Results
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="dismissAIResults()">
+                                                    <i class="fas fa-times me-1"></i>Dismiss
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -233,19 +267,29 @@
 </style>
 
 <script>
-// Image upload and preview
-document.querySelector('.upload-area').addEventListener('click', function() {
-    document.getElementById('cover_image').click();
-});
+// Global variable to store AI analysis results and file reference
+let aiAnalysisData = null;
+let selectedImageFile = null;
 
-function previewImage(input) {
+function handleImageUpload(input) {
     if (input.files && input.files[0]) {
+        selectedImageFile = input.files[0]; // Store file reference
+        console.log('File selected:', selectedImageFile.name, selectedImageFile.size, selectedImageFile.type); // Debug log
+        
         const reader = new FileReader();
         
         reader.onload = function(e) {
             document.getElementById('preview-img').src = e.target.result;
             document.getElementById('upload-placeholder').classList.add('d-none');
             document.getElementById('image-preview').classList.remove('d-none');
+            
+            // Show auto-analysis notification
+            showToast('AI Analysis', 'Starting automatic analysis of your book cover...', 'info');
+            
+            // Auto-analyze with slight delay to ensure image is loaded
+            setTimeout(() => {
+                analyzeImage();
+            }, 1000);
         }
         
         reader.readAsDataURL(input.files[0]);
@@ -256,35 +300,199 @@ function removeImage() {
     document.getElementById('cover_image').value = '';
     document.getElementById('upload-placeholder').classList.remove('d-none');
     document.getElementById('image-preview').classList.add('d-none');
+    document.getElementById('ai-results').classList.add('d-none');
+    document.getElementById('analysis-loading').classList.add('d-none');
+    aiAnalysisData = null;
+    selectedImageFile = null; // Clear file reference
+}
+
+function analyzeImage() {
+    console.log('analyzeImage called'); // Debug log
+    console.log('selectedImageFile:', selectedImageFile); // Debug log
+    
+    if (!selectedImageFile) {
+        console.log('No file stored in selectedImageFile, checking input...'); // Debug log
+        const fileInput = document.getElementById('cover_image');
+        console.log('File input:', fileInput); // Debug log
+        console.log('Files:', fileInput.files); // Debug log
+        console.log('Number of files:', fileInput.files ? fileInput.files.length : 0); // Debug log
+        
+        if (!fileInput.files || !fileInput.files[0]) {
+            console.log('No file selected!'); // Debug log
+            showToast('Error', 'Please select an image first', 'warning');
+            return;
+        }
+        selectedImageFile = fileInput.files[0]; // Use file from input as fallback
+    }
+    
+    console.log('Starting AI analysis...'); // Debug log
+    console.log('File info:', selectedImageFile.name, selectedImageFile.size, selectedImageFile.type); // Debug log
+    
+    const formData = new FormData();
+    formData.append('cover_image', selectedImageFile);
+    
+    // Show loading
+    document.getElementById('analysis-loading').classList.remove('d-none');
+    document.getElementById('ai-results').classList.add('d-none');
+    document.getElementById('analyze-btn').disabled = true;
+    
+    console.log('Sending request to /api/analyze_cover...'); // Debug log
+    
+    fetch('/api/analyze_cover', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('Response received:', response.status); // Debug log
+        return response.json();
+    })
+    .then(data => {
+        console.log('AI response:', data); // Debug log
+        document.getElementById('analysis-loading').classList.add('d-none');
+        document.getElementById('analyze-btn').disabled = false;
+        
+        if (data.success && data.data) {
+            aiAnalysisData = data.data;
+            displayAIResults(data.data);
+            showToast('AI Analysis', 'Book cover analyzed successfully!', 'success');
+        } else {
+            showToast('AI Analysis', data.error || 'Could not analyze the image', 'warning');
+            console.error('AI Analysis failed:', data);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error); // Debug log
+        document.getElementById('analysis-loading').classList.add('d-none');
+        document.getElementById('analyze-btn').disabled = false;
+        showToast('Error', 'Failed to analyze image: ' + error.message, 'error');
+    });
+}
+
+function displayAIResults(data) {
+    const resultsDiv = document.getElementById('ai-extracted-info');
+    resultsDiv.innerHTML = `
+        <div class="row g-2">
+            <div class="col-md-6">
+                <strong>Title:</strong> ${data.title || 'Not detected'}
+            </div>
+            <div class="col-md-6">
+                <strong>Author:</strong> ${data.author || 'Not detected'}
+            </div>
+            <div class="col-md-4">
+                <strong>Genre:</strong> ${data.genre || 'Not detected'}
+            </div>
+            <div class="col-md-4">
+                <strong>Year:</strong> ${data.year || 'Not detected'}
+            </div>
+            <div class="col-md-4">
+                <strong>Rating:</strong> ${data.rating ? data.rating + '/5 ⭐' : 'Not available'}
+            </div>
+            <div class="col-md-12">
+                <strong>Tags:</strong> ${data.tags ? data.tags.join(', ') : 'None'}
+            </div>
+            <div class="col-12">
+                <strong>Description:</strong><br>
+                <small>${data.description || 'No description generated'}</small>
+            </div>
+        </div>
+    `;
+    document.getElementById('ai-results').classList.remove('d-none');
+}
+
+function applyAIResults() {
+    if (!aiAnalysisData) return;
+    
+    // Fill form fields with AI results
+    if (aiAnalysisData.title) {
+        document.getElementById('title').value = aiAnalysisData.title;
+    }
+    if (aiAnalysisData.author) {
+        document.getElementById('author').value = aiAnalysisData.author;
+    }
+    if (aiAnalysisData.genre && aiAnalysisData.genre !== 'Other') {
+        document.getElementById('genre').value = aiAnalysisData.genre;
+    }
+    if (aiAnalysisData.year) {
+        document.getElementById('year').value = aiAnalysisData.year;
+    }
+    if (aiAnalysisData.rating) {
+        // Convert rating to nearest whole number for the select dropdown
+        const roundedRating = Math.round(parseFloat(aiAnalysisData.rating));
+        if (roundedRating >= 1 && roundedRating <= 5) {
+            document.getElementById('rating').value = roundedRating.toString();
+        }
+    }
+    if (aiAnalysisData.description) {
+        document.getElementById('description').value = aiAnalysisData.description;
+        updateCharCount();
+    }
+    
+    showToast('Success', 'AI analysis results applied to form!', 'success');
+    dismissAIResults();
+}
+
+function dismissAIResults() {
+    document.getElementById('ai-results').classList.add('d-none');
+}
+
+function showToast(title, message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    const alertType = type === 'success' ? 'success' : 
+                     type === 'warning' ? 'warning' : 
+                     type === 'info' ? 'info' : 'danger';
+    toast.className = `alert alert-${alertType} alert-dismissible position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        <strong>${title}:</strong> ${message}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
 }
 
 // Drag and drop functionality
-const uploadArea = document.querySelector('.upload-area');
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.querySelector('.upload-area');
 
-uploadArea.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    this.classList.add('dragover');
-});
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
 
-uploadArea.addEventListener('dragleave', function(e) {
-    e.preventDefault();
-    this.classList.remove('dragover');
-});
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
 
-uploadArea.addEventListener('drop', function(e) {
-    e.preventDefault();
-    this.classList.remove('dragover');
-    
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        document.getElementById('cover_image').files = files;
-        previewImage(document.getElementById('cover_image'));
-    }
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const fileInput = document.getElementById('cover_image');
+            fileInput.files = files;
+            selectedImageFile = files[0]; // Store the dropped file
+            handleImageUpload(fileInput);
+        }
+    });
 });
 
 // Character counter for description
 const descriptionTextarea = document.getElementById('description');
 const charCount = document.getElementById('char-count');
+
+function updateCharCount() {
+    if (descriptionTextarea && charCount) {
+        charCount.textContent = descriptionTextarea.value.length;
+    }
+}
 
 descriptionTextarea.addEventListener('input', function() {
     charCount.textContent = this.value.length;

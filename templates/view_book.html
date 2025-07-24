@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<!-- Google Fonts - Roboto Condensed -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+{% endblock %}
+
 {% block title %}{{ book.title }} - BookKeeper{% endblock %}
 
 {% block content %}
@@ -10,7 +17,7 @@
             <i class="fas fa-arrow-left"></i>
         </a>
         <div class="flex-grow-1">
-            <h1 class="h2 mb-1">{{ book.title }}</h1>
+            <h1 class="h2 mb-1 book-title">{{ book.title }}</h1>
             <p class="text-dark mb-0">by {{ book.author }}</p>
             <small class="text-dark">
                 <i class="fas fa-user me-1"></i>Shared by {{ book.owner.username }}
@@ -352,6 +359,12 @@
 {% endif %}
 
 <style>
+.book-title {
+    font-family: 'Roboto Condensed', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
 .book-cover-large {
     max-height: 400px;
     max-width: 100%;
@@ -361,7 +374,7 @@
 .book-description {
     line-height: 1.6;
     font-size: 1.1em;
-    color: #333;
+    color: #ffffff !important;
 }
 
 .rating-display {
@@ -413,10 +426,27 @@
 
 .like-btn {
     transition: all 0.3s ease;
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
 }
 
 .like-btn:hover {
     transform: scale(1.05);
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+}
+
+.like-btn.btn-outline-danger {
+    background-color: #f8f9fa !important;
+    border-color: #dc3545 !important;
+    color: #dc3545 !important;
+}
+
+.like-btn.btn-outline-danger:hover {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
 }
 
 .comment-item {
@@ -439,6 +469,11 @@
 
 .comment-item:hover .delete-comment-btn {
     opacity: 1;
+}
+
+.comment-content {
+    color: #000000 !important;
+    font-weight: 500;
 }
 
 /* Custom filter for better text readability */

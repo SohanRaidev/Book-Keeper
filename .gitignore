@@ -62,10 +62,26 @@ Thumbs.db
 static/uploads/*
 !static/uploads/default_book.png
 
-# Environment variables
+# Environment variables (Contains API Keys - NEVER COMMIT)
 .env
 .env.local
 .env.production
+.env.development
+.env.test
+
+# AI Documentation (Generated files)
+README_AI.md
+ai.md
+AI.md
+readme_ai.md
+
+# API Keys and Secrets
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+config/secrets.py
 
 # Coverage reports
 htmlcov/

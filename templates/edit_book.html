@@ -92,20 +92,12 @@
                                 </div>
                                 
                                 <div class="row">
-                                    <div class="col-md-6 mb-4">
+                                    <div class="col-md-12 mb-4">
                                         <label for="year" class="form-label fw-semibold">
                                             <i class="fas fa-calendar me-2"></i>Publication Year
                                         </label>
                                         <input type="text" class="form-control form-control-lg" id="year" name="year" 
                                                maxlength="10" value="{{ book.year or '' }}">
-                                    </div>
-                                    
-                                    <div class="col-md-6 mb-4">
-                                        <label for="isbn" class="form-label fw-semibold">
-                                            <i class="fas fa-barcode me-2"></i>ISBN
-                                        </label>
-                                        <input type="text" class="form-control form-control-lg" id="isbn" name="isbn" 
-                                               maxlength="50" value="{{ book.isbn or '' }}">
                                     </div>
                                 </div>
                             </div>

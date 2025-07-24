@@ -6,13 +6,25 @@ from werkzeug.security import generate_password_hash
 from models import db, User, Book, Like, Comment
 import uuid
 from PIL import Image
+import google.generativeai as genai
+from dotenv import load_dotenv
+import base64
+import io
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-this-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookkeeper.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Configure Gemini AI
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+if GEMINI_API_KEY and GEMINI_API_KEY != 'your_gemini_api_key_here':
+    genai.configure(api_key=GEMINI_API_KEY)
 
 # Initialize extensions
 db.init_app(app)
@@ -50,6 +62,72 @@ def resize_image(image_path, max_size=(400, 600)):
             img.save(image_path, optimize=True, quality=85)
     except Exception as e:
         print(f"Error resizing image: {e}")
+
+def analyze_book_cover_with_gemini(image_path):
+    """
+    Analyze book cover using Gemini API to extract book information
+    Returns dict with title, description, genre, etc.
+    """
+    if not GEMINI_API_KEY or GEMINI_API_KEY == 'your_gemini_api_key_here':
+        print("Gemini API key not configured properly")
+        return None
+    
+    try:
+        # Read and encode image
+        with open(image_path, 'rb') as image_file:
+            image_data = image_file.read()
+        
+        # Configure Gemini 2.0 Flash model (latest and better free tier limits)
+        model = genai.GenerativeModel('gemini-2.0-flash')
+        
+        # Prepare the enhanced prompt
+        prompt = """
+        Analyze this book cover image and provide comprehensive book information in JSON format. Use your knowledge to provide accurate details about this book:
+        
+        {
+            "title": "extracted book title from the cover",
+            "author": "extracted author name from the cover", 
+            "year": "publication year (search your knowledge base for this specific book)",
+            "genre": "most appropriate genre from: Fiction, Non-Fiction, Mystery, Romance, Science Fiction, Fantasy, Biography, History, Self-Help, Business, Technology, Health, Travel, Art, Philosophy, Other",
+            "rating": "average rating out of 5 stars (e.g., 4.2) based on popular review sites and your knowledge",
+            "description": "a detailed 4-6 sentence description that includes: plot summary, main themes, writing style, and what makes this book notable or popular. Make it informative and engaging.",
+            "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"] // relevant tags like "romance", "sci-fi", "bestseller", "award-winning", etc.
+        }
+        
+        Instructions:
+        1. Extract title and author directly from the cover image
+        2. Use your knowledge base to find the publication year, rating, and detailed information about this specific book
+        3. Provide a rich, informative description that tells readers what the book is about and why they might want to read it
+        4. Include relevant tags that help categorize and discover the book
+        5. If you cannot identify the specific book, provide the best estimates based on the cover design and any visible text
+        6. For rating, use your knowledge of popular ratings from Goodreads, Amazon, etc.
+        """
+        
+        # Create image part
+        image_part = {
+            "mime_type": "image/jpeg",
+            "data": image_data
+        }
+        
+        # Generate response
+        response = model.generate_content([prompt, image_part])
+        
+        # Parse JSON response
+        import json
+        response_text = response.text.strip()
+        
+        # Clean up response text (remove markdown formatting if present)
+        if response_text.startswith('```json'):
+            response_text = response_text[7:-3]
+        elif response_text.startswith('```'):
+            response_text = response_text[3:-3]
+        
+        book_info = json.loads(response_text)
+        return book_info
+        
+    except Exception as e:
+        print(f"Error analyzing book cover with Gemini: {e}")
+        return None
 
 @app.route('/')
 def index():
@@ -217,7 +295,6 @@ def add_book():
         genre = request.form['genre']
         description = request.form['description']
         year = request.form['year']
-        isbn = request.form['isbn']
         rating = request.form['rating']
         
         # Validation
@@ -248,7 +325,6 @@ def add_book():
             genre=genre,
             description=description,
             year=year,
-            isbn=isbn,
             rating=float(rating) if rating else None,
             cover_image=cover_image,
             user_id=current_user.id
@@ -264,6 +340,98 @@ def add_book():
             flash('Error adding book. Please try again.', 'danger')
     
     return render_template('add_book.html')
+
+@app.route('/api/analyze_cover', methods=['POST'])
+@login_required
+def analyze_cover():
+    """API endpoint to analyze book cover using Gemini AI"""
+    print(f"analyze_cover endpoint called by user: {current_user.username}")  # Debug print
+    
+    if 'cover_image' not in request.files:
+        print("No cover_image in request files")  # Debug print
+        return jsonify({'error': 'No image provided'}), 400
+    
+    file = request.files['cover_image']
+    print(f"File received: {file.filename}, content type: {file.content_type}")  # Debug print
+    
+    if not file or not file.filename or not allowed_file(file.filename):
+        print("Invalid file or filename")  # Debug print
+        return jsonify({'error': 'Invalid image file'}), 400
+    
+    try:
+        # Save temporary file
+        temp_filename = str(uuid.uuid4()) + '.' + file.filename.rsplit('.', 1)[1].lower()
+        temp_path = os.path.join(app.config['UPLOAD_FOLDER'], temp_filename)
+        print(f"Saving temp file to: {temp_path}")  # Debug print
+        file.save(temp_path)
+        
+        # Verify file was saved
+        if not os.path.exists(temp_path):
+            print("Temp file was not saved properly")  # Debug print
+            return jsonify({'error': 'Failed to save uploaded file'}), 500
+        
+        print(f"Temp file size: {os.path.getsize(temp_path)} bytes")  # Debug print
+        
+        # Analyze with Gemini
+        print("Calling analyze_book_cover_with_gemini...")  # Debug print
+        book_info = analyze_book_cover_with_gemini(temp_path)
+        
+        # Clean up temporary file
+        try:
+            os.remove(temp_path)
+        except:
+            pass
+        
+        if book_info:
+            return jsonify({
+                'success': True,
+                'data': book_info
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Could not analyze the image. AI service may be unavailable or the image may not be clear enough.'
+            })
+    
+    except Exception as e:
+        print(f"Error in analyze_cover: {e}")  # Debug print
+        
+        # Check if it's a quota error
+        error_message = str(e)
+        if "429" in error_message or "quota" in error_message.lower():
+            return jsonify({
+                'success': False,
+                'error': 'AI analysis temporarily unavailable due to usage limits. Please try again in a few minutes or use manual entry.'
+            }), 429
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Error analyzing image: {str(e)}'
+            }), 500
+
+@app.route('/api/test_ai')
+@login_required
+def test_ai():
+    """Simple endpoint to test if AI is configured"""
+    if not GEMINI_API_KEY or GEMINI_API_KEY == 'your_gemini_api_key_here':
+        return jsonify({
+            'status': 'error',
+            'message': 'Gemini API key not configured'
+        })
+    
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        return jsonify({
+            'status': 'success',
+            'message': 'AI is properly configured and ready to use!'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'AI configuration error: {str(e)}'
+        })
 
 @app.route('/book/<int:book_id>')
 def view_book(book_id):
@@ -289,7 +457,6 @@ def edit_book(book_id):
         book.genre = request.form['genre']
         book.description = request.form['description']
         book.year = request.form['year']
-        book.isbn = request.form['isbn']
         book.rating = float(request.form['rating']) if request.form['rating'] else None
         
         # Handle new cover image upload
@@ -408,7 +575,12 @@ def toggle_like(book_id):
 @login_required
 def add_comment(book_id):
     book = Book.query.get_or_404(book_id)
-    content = request.form.get('content', '').strip()
+    
+    # Handle both JSON and form data
+    if request.is_json:
+        content = request.get_json().get('content', '').strip()
+    else:
+        content = request.form.get('content', '').strip()
     
     if not content:
         return jsonify({'success': False, 'error': 'Comment cannot be empty'}), 400
