@@ -78,37 +78,6 @@
     </div>
 </div>
 
-<!-- Demo Credentials Card -->
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-5 col-md-7">
-            <div class="card border-info">
-                <div class="card-header bg-info text-white">
-                    <h6 class="mb-0">
-                        <i class="fas fa-info-circle me-2"></i>Demo Credentials
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <p class="small mb-2">
-                        <strong>New here?</strong> Create an account above or try these demo credentials:
-                    </p>
-                    <div class="demo-credentials">
-                        <div class="mb-2">
-                            <code class="bg-light p-1 rounded">Username: demo</code>
-                        </div>
-                        <div class="mb-2">
-                            <code class="bg-light p-1 rounded">Password: demo123</code>
-                        </div>
-                        <button class="btn btn-outline-info btn-sm" onclick="fillDemo()">
-                            <i class="fas fa-magic me-1"></i>Use Demo Login
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
 .card {
     border-radius: 15px;
@@ -142,14 +111,6 @@
 
 .input-group .btn {
     border-radius: 0 10px 10px 0;
-}
-
-.demo-credentials code {
-    font-size: 0.9em;
-}
-
-.card-info {
-    background-color: rgba(13, 202, 240, 0.1);
 }
 </style>
 
@@ -186,25 +147,6 @@ document.getElementById('togglePassword').addEventListener('click', function() {
         });
     }, false);
 })();
-
-// Fill demo credentials
-function fillDemo() {
-    document.getElementById('username').value = 'demo';
-    document.getElementById('password').value = 'demo123';
-    
-    // Show filled message
-    const btn = event.target;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-check me-1"></i>Filled!';
-    btn.classList.add('btn-success');
-    btn.classList.remove('btn-outline-info');
-    
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.classList.remove('btn-success');
-        btn.classList.add('btn-outline-info');
-    }, 2000);
-}
 
 // Auto-focus on username field
 document.addEventListener('DOMContentLoaded', function() {
