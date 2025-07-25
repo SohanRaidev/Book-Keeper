@@ -74,7 +74,8 @@ README_AI.md
 ai.md
 AI.md
 readme_ai.md
-
+DEPLOYMENT.md
+deploy-check.sh
 # API Keys and Secrets
 *.key
 *.pem
