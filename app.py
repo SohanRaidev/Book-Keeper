@@ -628,7 +628,9 @@ def delete_comment(comment_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-if __name__ == '__main__':
+# Initialize database and create tables
+def init_db():
+    """Initialize database tables and create necessary directories"""
     with app.app_context():
         db.create_all()
         
@@ -653,5 +655,9 @@ if __name__ == '__main__':
                 # If PIL is not available, just create an empty file
                 with open(default_cover_path, 'w') as f:
                     f.write('')
-    
+
+# Initialize database on app startup (for production)
+init_db()
+
+if __name__ == '__main__':
     app.run(debug=True)
